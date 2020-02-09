@@ -6,13 +6,17 @@ const bodyParser = require('body-parser');
 const app = express();
 app.use(bodyParser.urlencoded({ extended: false }));
 
+app.get('/', function (req, res) {
+  res.send('Text2Node');
+});
+app.get('/test', function (req, res) {
+  res.send('TEST');
+});
+
 app.post('/sms', (req, res) => {
   const twiml = new MessagingResponse();
-
   console.log(req.body.Body)
-
   twiml.message('Your message recieved by: Guy Cherkesky');
-
   res.writeHead(200, {'Content-Type': 'text/xml'});
   res.end(twiml.toString());
 });
