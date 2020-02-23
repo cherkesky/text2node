@@ -11,9 +11,11 @@ const fetch = require('node-fetch');
 const mymongopass = ApiKeys.mymongopass
 const mongoose = require('mongoose')
 const Userconnection = require('./userconnection')
+const greeting = require('./greeting')
 
 const state = {
   isRegistering: false,
+  isAuth: false,
   lastCommand: ""
 }
 const newUser = {
@@ -24,6 +26,7 @@ const newUser = {
   "last_name": "",
   "family_members": 0
 }
+
 
 //mongoose connect
 mongoose.connect(`mongodb+srv://cherkesky:${mymongopass}@text2node-eywb4.mongodb.net/test?retryWrites=true&w=majority`, {
@@ -45,7 +48,7 @@ app.get('/test', function (req, res) {
 
 // the SMS main route
 app.post('/sms', (req, res) => {
-
+  // if the t
   if (state.isRegistering == true) {
     if (state.lastCommand == "register") {
       console.log(`First Name ${req.body.Body}`)
@@ -78,6 +81,8 @@ app.post('/sms', (req, res) => {
       console.log(`Password ${req.body.Body}`)
       newUser.password = req.body.Body
       state.isRegistering = false
+      state.isAuth = true
+
       state.lastCommand = "password"
 
       newUser.username = parseInt(req.body.From.split("+")[1])
@@ -102,6 +107,12 @@ app.post('/sms', (req, res) => {
             .then(result => {
               console.log("Mongoose Save: ", result)
             }).catch(err => console.log(err))
+            const twiml = new MessagingResponse();
+            twiml.message(`Sweet! you're in!
+             Your user name is ${newUser.username} 
+             and your password ends with ****** ${newUser.password.slice(-4)}`)
+            res.writeHead(200, { 'Content-Type': 'text/xml' });
+            res.end(twiml.toString())
         })
     }
   }
@@ -127,6 +138,16 @@ app.post('/sms', (req, res) => {
         res.writeHead(200, { 'Content-Type': 'text/xml' });
         res.end(twiml.toString())
       })
+  }
+  else if (req.body.Body === "start" || req.body.Body === "Start") { // start
+    console.log(req.body.Body)
+    lastCommand = "start"
+
+    const twiml = new MessagingResponse();
+    twiml.message(greeting)
+
+    res.writeHead(200, { 'Content-Type': 'text/xml' });
+    res.end(twiml.toString())
   }
   else {
     console.log("Unknown Command")
