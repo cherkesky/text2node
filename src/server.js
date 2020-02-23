@@ -16,6 +16,14 @@ const state = {
   isRegistering: false,
   lastCommand: ""
 }
+const newUser = {
+  "username": "",
+  "password": "",
+  "email": "",
+  "first_name": "",
+  "last_name": "",
+  "family_members": 0
+}
 
 //mongoose connect
 mongoose.connect(`mongodb+srv://cherkesky:${mymongopass}@text2node-eywb4.mongodb.net/test?retryWrites=true&w=majority`, {
@@ -37,88 +45,101 @@ app.get('/test', function (req, res) {
 
 // the SMS main route
 app.post('/sms', (req, res) => {
-  let newUser = {
-    "username": parseInt(req.body.From.split("+")[1]),
-    "password": "",
-    "email": "",
-    "first_name": "",
-    "last_name": "",
-    "family_members": 0
-  }
-    if (state.isRegistering==true){
-      if (state.lastCommand=="register"){
-          console.log(`First Name ${req.body.Body}` )
-          newUser.first_name = req.body.Body
-          const twiml = new MessagingResponse();
-          twiml.message("What is your last name?")
-          res.writeHead(200, { 'Content-Type': 'text/xml' });
-          res.end(twiml.toString())
-          state.lastCommand="first"
-      }
-      else if (state.lastCommand == "first") {
-        console.log(`Last Name ${req.body.Body}` )
-        newUser.email = req.body.Body
-        const twiml = new MessagingResponse();
-        twiml.message("What is your email?")
-        res.writeHead(200, { 'Content-Type': 'text/xml' });
-        res.end(twiml.toString())
-        state.lastCommand="last"
-      }
-      else if (state.lastCommand == "last") {
-        console.log(`Email ${req.body.Body}` )
-        newUser.password = req.body.Body
-        const twiml = new MessagingResponse();
-        twiml.message("What is your password?")
-        res.writeHead(200, { 'Content-Type': 'text/xml' });
-        res.end(twiml.toString())
-        state.lastCommand="email"
-      }
-      else if (state.lastCommand == "email") {
-        console.log(`Password ${req.body.Body}` )
-        state.isRegistering = false
-        state.lastCommand="password"
 
-        console.log(newUser)
-      }
-    }
-    else if (req.body.Body === "register" || req.body.Body === "Register" || req.body.Body === "Register " || req.body.Body === "register ") {
-      
-        state.isRegistering = true
-        state.lastCommand = "register"
-
-        const twiml = new MessagingResponse();
-        twiml.message("Hi there stranger! Let's get to know you. What is your first name?")
-        res.writeHead(200, { 'Content-Type': 'text/xml' });
-        res.end(twiml.toString())
-    }
-    else if (req.body.Body === "joke" || req.body.Body === "Joke") { // fetch a joke 
-        console.log(req.body.Body)
-        lastCommand = "joke"
-    
-        fetch('https://api.chucknorris.io/jokes/random')
-          .then(response => response.json())
-          .then(joke => {
-            const twiml = new MessagingResponse();
-            twiml.message(joke.value)
-            res.writeHead(200, { 'Content-Type': 'text/xml' });
-            res.end(twiml.toString())
-          })
-      }
-
-    else {
-      console.log("Unknown Command")
-      console.log("from:", req.body.From)
-      console.log ("body", req.body.Body)
+  if (state.isRegistering == true) {
+    if (state.lastCommand == "register") {
+      console.log(`First Name ${req.body.Body}`)
+      newUser.first_name = req.body.Body
       const twiml = new MessagingResponse();
-      twiml.message("Unknown Command");
+      twiml.message("What is your last name?")
       res.writeHead(200, { 'Content-Type': 'text/xml' });
-      res.end(twiml.toString());
+      res.end(twiml.toString())
+      state.lastCommand = "first"
     }
+    else if (state.lastCommand == "first") {
+      console.log(`Last Name ${req.body.Body}`)
+      newUser.last_name = req.body.Body
+      const twiml = new MessagingResponse();
+      twiml.message("What is your email?")
+      res.writeHead(200, { 'Content-Type': 'text/xml' });
+      res.end(twiml.toString())
+      state.lastCommand = "last"
+    }
+    else if (state.lastCommand == "last") {
+      console.log(`Email ${req.body.Body}`)
+      newUser.email = req.body.Body
+      const twiml = new MessagingResponse();
+      twiml.message("What is your password?")
+      res.writeHead(200, { 'Content-Type': 'text/xml' });
+      res.end(twiml.toString())
+      state.lastCommand = "email"
+    }
+    else if (state.lastCommand == "email") {
+      console.log(`Password ${req.body.Body}`)
+      newUser.password = req.body.Body
+      state.isRegistering = false
+      state.lastCommand = "password"
 
-   
-  }) // app.post bracket
-  
-  
+      newUser.username = parseInt(req.body.From.split("+")[1])
+
+      console.log(newUser)
+
+      fetch(`http://localhost:8000/register`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(newUser)
+      }).then(data => data.json())
+        .then(jsonfiedData => {
+          // save token in mongodb
+          const userconnection = new Userconnection({
+            _id: new mongoose.Types.ObjectId,
+            cid: parseInt(req.body.From.split("+")[1]),
+            token: jsonfiedData.token
+          })
+          userconnection.save()
+            .then(result => {
+              console.log("Mongoose Save: ", result)
+            }).catch(err => console.log(err))
+        })
+    }
+  }
+  else if (req.body.Body === "register" || req.body.Body === "Register" || req.body.Body === "Register " || req.body.Body === "register ") {
+
+    state.isRegistering = true
+    state.lastCommand = "register"
+
+    const twiml = new MessagingResponse();
+    twiml.message("Hi there stranger! Let's get to know you. What is your first name?")
+    res.writeHead(200, { 'Content-Type': 'text/xml' });
+    res.end(twiml.toString())
+  }
+  else if (req.body.Body === "joke" || req.body.Body === "Joke") { // fetch a joke 
+    console.log(req.body.Body)
+    lastCommand = "joke"
+
+    fetch('https://api.chucknorris.io/jokes/random')
+      .then(response => response.json())
+      .then(joke => {
+        const twiml = new MessagingResponse();
+        twiml.message(joke.value)
+        res.writeHead(200, { 'Content-Type': 'text/xml' });
+        res.end(twiml.toString())
+      })
+  }
+  else {
+    console.log("Unknown Command")
+    console.log("from:", req.body.From)
+    console.log("body", req.body.Body)
+    const twiml = new MessagingResponse();
+    twiml.message("Unknown Command");
+    res.writeHead(200, { 'Content-Type': 'text/xml' });
+    res.end(twiml.toString());
+  }
+}) // app.post bracket
+
+
 
 
 
@@ -157,20 +178,7 @@ http.createServer(app).listen(1337, () => {
   // }) . catch(err => console.log(err))
 
 
-  // if (req.body.Body === "joke" || req.body.Body === "Joke") { // fetch a joke 
-  //   console.log(req.body.Body)
-  //   lastCommand = "joke"
 
-  //   fetch('https://api.chucknorris.io/jokes/random')
-  //     .then(response => response.json())
-  //     .then(joke => {
-  //       const twiml = new MessagingResponse();
-  //       twiml.message(joke.value)
-  //       res.writeHead(200, { 'Content-Type': 'text/xml' });
-  //       res.end(twiml.toString())
-  //     })
-  // }
-  
    // const registerUser = Userconnection.findOne({
     //   cid: parseInt(req.body.From.split("+")[1])
     // })
@@ -180,7 +188,7 @@ http.createServer(app).listen(1337, () => {
     //   if (err) return handleError(err)
     //   console.log("UID:", userconnection._id )
     // })
-  
+
 
      // creating a user in MongoDB to host the token from Django
     //  const userconnection = new Userconnection({
@@ -192,7 +200,7 @@ http.createServer(app).listen(1337, () => {
     //   .then(result => {
     //     console.log("Mongoose Save: ", result)
     //   }).catch(err => console.log(err))
-    
+
     // fetch(`http://localhost:8000/register`, {
     //   method: "POST",
     //   headers: {
