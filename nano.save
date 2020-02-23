@@ -1,6 +1,0 @@
-curl -X POST 'https://chat.twilio.com/v2/Services/IS44fb87dc8b884bcf8fa854f1ce47e7e9/Channels/{ChannelSid}/Webhooks/' \
--d "Type=webhook" \
--d "Configuration.Url={ https://channels.autopilot.twilio.com/v1/ACec7734a550fbbe92ed1c44e99f23a57f/UAdc90c6e72f823d16f50bcd015d90b32e/twilio-messaging}" \
--d "Configuration.Method=POST" \
--d "Configuration.Filters=onMessageSent" \
--u {AccountSid}:{token}
