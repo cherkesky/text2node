@@ -2,10 +2,10 @@
   "name": "text2node",
   "version": "1.0.0",
   "description": "A sample Express + Twilio project",
-  "main": "src/main.js",
+  "main": "src/server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node src/main.js"
+    "start": "node src/server.js"
   },
   "repository": {
     "type": "git",

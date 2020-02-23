@@ -4,7 +4,6 @@ const userconnectionSchema = mongoose.Schema({
 
     _id: mongoose.Types.ObjectId,
     cid: Number,
-    body: String,
     token: String
 })
 
