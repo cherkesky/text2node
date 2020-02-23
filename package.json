@@ -2,10 +2,10 @@
   "name": "text2node",
   "version": "1.0.0",
   "description": "A sample Express + Twilio project",
-  "main": "src/main.js",
+  "main": "src/server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node src/main.js"
+    "start": "node src/server.js"
   },
   "repository": {
     "type": "git",
@@ -24,6 +24,7 @@
   "homepage": "https://github.com/cherkesky/text2node#readme",
   "dependencies": {
     "express": "^4.17.1",
+    "mongoose": "^5.9.2",
     "node-fetch": "^2.6.0",
     "nodemon": "^2.0.2",
     "twilio": "^3.39.5"
