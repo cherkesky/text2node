@@ -23,7 +23,7 @@
   },
   "homepage": "https://github.com/cherkesky/text2node#readme",
   "dependencies": {
-    "express": "^4.17.3",
+    "express": "^4.21.2",
     "mongoose": "^5.9.2",
     "node-fetch": "^2.6.7",
     "nodemon": "^2.0.2",
